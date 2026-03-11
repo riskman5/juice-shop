@@ -149,84 +149,64 @@ describe('/rest/user/login', () => {
       })
   })
 
-  it('POST login with WHERE-clause disabling SQL injection attack', () => {
+  it('POST login rejects WHERE-clause disabling SQL injection payload', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: '\' or 1=1--',
         password: undefined
       }
     })
-      .expect('status', 200)
-      .expect('header', 'content-type', /application\/json/)
-      .expect('jsonTypes', 'authentication', {
-        token: Joi.string()
-      })
+      .expect('status', 401)
   })
 
-  it('POST login with known email "admin@juice-sh.op" in SQL injection attack', () => {
+  it('POST login rejects SQL injection payload targeting admin account', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: 'admin@' + config.get<string>('application.domain') + '\'--',
         password: undefined
       }
     })
-      .expect('status', 200)
-      .expect('header', 'content-type', /application\/json/)
-      .expect('jsonTypes', 'authentication', {
-        token: Joi.string()
-      })
+      .expect('status', 401)
   })
 
-  it('POST login with known email "jim@juice-sh.op" in SQL injection attack', () => {
+  it('POST login rejects SQL injection payload targeting Jim account', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: 'jim@' + config.get<string>('application.domain') + '\'--',
         password: undefined
       }
     })
-      .expect('status', 200)
-      .expect('header', 'content-type', /application\/json/)
-      .expect('jsonTypes', 'authentication', {
-        token: Joi.string()
-      })
+      .expect('status', 401)
   })
 
-  it('POST login with known email "bender@juice-sh.op" in SQL injection attack', () => {
+  it('POST login rejects SQL injection payload targeting Bender account', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: 'bender@' + config.get<string>('application.domain') + '\'--',
         password: undefined
       }
     })
-      .expect('status', 200)
-      .expect('header', 'content-type', /application\/json/)
-      .expect('jsonTypes', 'authentication', {
-        token: Joi.string()
-      })
+      .expect('status', 401)
   })
 
-  it('POST login with non-existing email "acc0unt4nt@juice-sh.op" via UNION SELECT injection attack', () => {
+  it('POST login rejects UNION SELECT injection payload for forged accountant account', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: `' UNION SELECT * FROM (SELECT 15 as 'id', '' as 'username', 'acc0unt4nt@${config.get<string>('application.domain')}' as 'email', '12345' as 'password', 'accounting' as 'role', '' as deluxeToken, '1.2.3.4' as 'lastLoginIp' , '/assets/public/images/uploads/default.svg' as 'profileImage', '' as 'totpSecret', 1 as 'isActive', '1999-08-16 14:14:41.644 +00:00' as 'createdAt', '1999-08-16 14:33:41.930 +00:00' as 'updatedAt', null as 'deletedAt')--`,
         password: undefined
       }
     })
-      .expect('status', 200)
-      .expect('header', 'content-type', /application\/json/)
-      .expect('jsonTypes', 'authentication', {
-        token: Joi.string()
-      })
+      .expect('status', 401)
   })
 
   it('POST login with query-breaking SQL Injection attack', () => {
     return frisby.post(REST_URL + '/user/login', {
-      header: jsonHeader,
+      headers: jsonHeader,
       body: {
         email: '\';',
         password: undefined

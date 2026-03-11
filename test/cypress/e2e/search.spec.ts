@@ -31,25 +31,27 @@ describe('/#/search', () => {
 })
 
 describe('/rest/products/search', () => {
-  describe('challenge "unionSqlInjection"', () => {
-    it('query param in product search endpoint should be susceptible to UNION SQL injection attacks', () => {
+  describe('regression: user credentials are not leaked via search', () => {
+    it('query param in product search endpoint should treat UNION SQL injection payloads as plain input', () => {
       cy.request(
         "/rest/products/search?q=')) union select id,'2','3',email,password,'6','7','8','9' from users--"
       )
-      cy.expectChallengeSolved({ challenge: 'User Credentials' })
+        .its('body.data')
+        .should('have.length', 0)
     })
   })
 
-  describe('challenge "dbSchema"', () => {
-    it('query param in product search endpoint should be susceptible to UNION SQL injection attacks', () => {
+  describe('regression: database schema is not leaked via search', () => {
+    it('query param in product search endpoint should treat schema UNION payloads as plain input', () => {
       cy.request(
         "/rest/products/search?q=')) union select sql,'2','3','4','5','6','7','8','9' from sqlite_master--"
       )
-      cy.expectChallengeSolved({ challenge: 'Database Schema' })
+        .its('body.data')
+        .should('have.length', 0)
     })
   })
 
-  describe('challenge "dlpPastebinLeakChallenge"', () => {
+  describe('regression: hidden products stay hidden under SQL payloads', () => {
     beforeEach(() => {
       cy.login({
         email: 'admin',
@@ -57,7 +59,7 @@ describe('/rest/products/search', () => {
       })
     })
 
-    it('search query should logically reveal the special product', () => {
+    it('search query should not reveal the special product', () => {
       cy.request("/rest/products/search?q='))--")
         .its('body')
         .then((sourceContent) => {
@@ -70,7 +72,7 @@ describe('/rest/products/search', () => {
               }
             })
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            expect(foundProduct).to.be.true
+            expect(foundProduct).to.be.false
           })
         })
     })
