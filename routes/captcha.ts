@@ -6,6 +6,22 @@
 import { type Request, type Response, type NextFunction } from 'express'
 import { CaptchaModel } from '../models/captcha'
 
+function applyOperator (left: number, operator: string, right: number) {
+  switch (operator) {
+    case '*': return left * right
+    case '+': return left + right
+    case '-': return left - right
+    default: throw new Error('Unsupported CAPTCHA operator')
+  }
+}
+
+function solveExpression (firstTerm: number, firstOperator: string, secondTerm: number, secondOperator: string, thirdTerm: number) {
+  if (secondOperator === '*' && firstOperator !== '*') {
+    return applyOperator(firstTerm, firstOperator, applyOperator(secondTerm, secondOperator, thirdTerm))
+  }
+  return applyOperator(applyOperator(firstTerm, firstOperator, secondTerm), secondOperator, thirdTerm)
+}
+
 export function captchas () {
   return async (req: Request, res: Response) => {
     const captchaId = req.app.locals.captchaId++
@@ -19,7 +35,7 @@ export function captchas () {
     const secondOperator = operators[Math.floor((Math.random() * 3))]
 
     const expression = firstTerm.toString() + firstOperator + secondTerm.toString() + secondOperator + thirdTerm.toString()
-    const answer = eval(expression).toString() // eslint-disable-line no-eval
+  const answer = solveExpression(firstTerm, firstOperator, secondTerm, secondOperator, thirdTerm).toString()
 
     const captcha = {
       captchaId,

@@ -3,4 +3,5 @@ data/static/codefixes/
 data/static/users.yml
 frontend/src/assets/private/
 frontend/src/**/*.spec.ts
+encryptionkeys/jwt.key
 test/
