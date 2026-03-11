@@ -1,0 +1,6 @@
+semgrep-report.json
+data/static/codefixes/
+data/static/users.yml
+frontend/src/assets/private/
+frontend/src/**/*.spec.ts
+test/
