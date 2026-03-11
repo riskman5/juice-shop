@@ -200,9 +200,10 @@ export const status = function status () {
 
     try {
       bot.addUser(`${user.id}`, username)
+      const body = bot.training.state ? security.sanitizeHtml(bot.greet(`${user.id}`)) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
       res.status(200).json({
         status: bot.training.state,
-        body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body
       })
     } catch (err) {
       next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))

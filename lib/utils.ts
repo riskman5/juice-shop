@@ -6,6 +6,7 @@
 /* jslint node: true */
 import packageJson from '../package.json'
 import fs from 'node:fs'
+import path from 'node:path'
 import logger from './logger'
 import config from 'config'
 import jsSHA from 'jssha'
@@ -116,6 +117,17 @@ export const extractFilename = (url: string) => {
     file = file.substring(0, file.indexOf('?'))
   }
   return file
+}
+
+export const resolveWithin = (baseDir: string, requestedPath: string) => {
+  const basePath = path.resolve(baseDir)
+  const resolvedPath = path.resolve(basePath, requestedPath)
+
+  if (resolvedPath !== basePath && !startsWith(resolvedPath, basePath + path.sep)) {
+    throw new Error('Resolved path escapes base directory')
+  }
+
+  return resolvedPath
 }
 
 export const downloadToFile = async (url: string, dest: string) => {

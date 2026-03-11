@@ -15,11 +15,11 @@ export function servePublicFiles () {
   return ({ params, query }: Request, res: Response, next: NextFunction) => {
     const file = params.file
 
-    if (!file.includes('/')) {
+    if (!file.includes('/') && !file.includes('\\')) {
       verify(file, res, next)
     } else {
       res.status(403)
-      next(new Error('File names cannot contain forward slashes!'))
+      next(new Error('File names cannot contain directory separators!'))
     }
   }
 
@@ -30,7 +30,8 @@ export function servePublicFiles () {
       challengeUtils.solveIf(challenges.directoryListingChallenge, () => { return file.toLowerCase() === 'acquisitions.md' })
       verifySuccessfulPoisonNullByteExploit(file)
 
-      res.sendFile(path.resolve('ftp/', file))
+      // nosemgrep: javascript.express.security.audit.express-res-sendfile.express-res-sendfile
+      res.sendFile(utils.resolveWithin('ftp', file))
     } else {
       res.status(403)
       next(new Error('Only .md and .pdf files are allowed!'))

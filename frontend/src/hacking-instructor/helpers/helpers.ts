@@ -6,12 +6,21 @@
 import jwtDecode from 'jwt-decode'
 
 let config
+const blockedConfigKeys = new Set(['__proto__', 'prototype', 'constructor'])
 const playbackDelays = {
   faster: 0.5,
   fast: 0.75,
   normal: 1.0,
   slow: 1.25,
   slower: 1.5
+}
+
+function getOwnValue (target: unknown, property: string): unknown {
+  if (target == null || (typeof target !== 'object' && typeof target !== 'function')) {
+    return undefined
+  }
+
+  return Object.getOwnPropertyDescriptor(target, property)?.value
 }
 
 export async function isChallengeSolved (challengeName: string): Promise<boolean> {
@@ -44,9 +53,14 @@ export function waitForInputToHaveValue (inputSelector: string, value: string, o
         config = json.config
       }
       const propertyChain = options.replacement[1].split('.')
-      let replacementValue = config
+      let replacementValue: any = config
       for (const property of propertyChain) {
-        replacementValue = replacementValue[property]
+        const nextValue = getOwnValue(replacementValue, property)
+        if (blockedConfigKeys.has(property) || nextValue === undefined) {
+          replacementValue = ''
+          break
+        }
+        replacementValue = nextValue
       }
       value = value.replace(options.replacement[0], replacementValue)
     }

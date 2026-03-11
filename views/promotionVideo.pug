@@ -50,7 +50,8 @@ html(lang='en')
             video(width='85vw', height='240', controls='controls')
                source(src='./video', type='video/mp4')
 
-        script#subtitle.
+        template#subtitle(data-label='English', data-lang='en').
+          _subtitles_
 
 
         script.
@@ -75,7 +76,7 @@ html(lang='en')
             for (var i = 0; i < lines.length; i++) {
             if (lines[i].indexOf('-->') >= 0) {
             var splitted = lines[i].split(/[ \\t]+-->[ \t]+/);
-            if (splitted.length != 2) {
+            if (splitted.length !== 2) {
             throw 'Error when splitting "-->": ' + lines[i];
             }
             // Already ignoring anything past the "end" timestamp (i.e. cue settings).
@@ -108,7 +109,7 @@ html(lang='en')
             var subtitle = document.getElementById('subtitle');
             var track = video.addTextTrack('subtitles', subtitle.dataset.label, subtitle.dataset.lang);
             track.mode = "showing";
-            quick_and_dirty_vtt_or_srt_parser(subtitle.innerHTML).map(function(cue) {
+            quick_and_dirty_vtt_or_srt_parser(subtitle.textContent).map(function(cue) {
             track.addCue(cue);
             });
             }

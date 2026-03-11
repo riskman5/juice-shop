@@ -83,6 +83,7 @@ describe('redirect', () => {
 
     performRedirect()(req, res, next)
 
-    expect(challenges.redirectChallenge.solved).to.equal(true)
+    expect(res.redirect).to.have.not.been.calledWith(sinon.match.any)
+    expect(challenges.redirectChallenge.solved).to.equal(false)
   })
 })

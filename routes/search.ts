@@ -4,9 +4,11 @@
  */
 
 import { type Request, type Response, type NextFunction } from 'express'
+import { Op } from 'sequelize'
 
 import * as utils from '../lib/utils'
 import * as models from '../models/index'
+import { ProductModel } from '../models/product'
 import { UserModel } from '../models/user'
 import { challenges } from '../data/datacache'
 import * as challengeUtils from '../lib/challengeUtils'
@@ -20,12 +22,21 @@ export function searchProducts () {
   return (req: Request, res: Response, next: NextFunction) => {
     let criteria: any = req.query.q === 'undefined' ? '' : req.query.q ?? ''
     criteria = (criteria.length <= 200) ? criteria : criteria.substring(0, 200)
-    models.sequelize.query(`SELECT * FROM Products WHERE ((name LIKE '%${criteria}%' OR description LIKE '%${criteria}%') AND deletedAt IS NULL) ORDER BY name`) // vuln-code-snippet vuln-line unionSqlInjectionChallenge dbSchemaChallenge
-      .then(([products]: any) => {
+    const likeCriteria = `%${criteria}%`
+    ;(ProductModel as any).findAll({
+      where: {
+        [Op.or]: [
+          { name: { [Op.like]: likeCriteria } },
+          { description: { [Op.like]: likeCriteria } }
+        ]
+      },
+      order: [['name', 'ASC']]
+    }) // vuln-code-snippet vuln-line unionSqlInjectionChallenge dbSchemaChallenge
+      .then((products: any) => {
         const dataString = JSON.stringify(products)
         if (challengeUtils.notSolved(challenges.unionSqlInjectionChallenge)) { // vuln-code-snippet hide-start
           let solved = true
-          UserModel.findAll().then(data => {
+          ;(UserModel as any).findAll().then((data: any) => {
             const users = utils.queryResultToJson(data)
             if (users.data?.length) {
               for (let i = 0; i < users.data.length; i++) {
